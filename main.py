@@ -8,12 +8,18 @@ lastNames = ["Smith", "Johnson", "Williams", "Jones", "Brown", "Davis", "Miller"
 conn = lite.connect('database.db')
 
 playerCursor = conn.cursor()
+gameCursor = conn.cursor()
+
+
 
 #Create a table called players if it does not exist
 playerCursor.execute("""CREATE TABLE IF NOT EXISTS players (id INTEGER PRIMARY KEY, name TEXT, offense INTEGER, defense INTEGER)""")
-
+gameCursor.execute("""CREATE TABLE IF NOT EXISTS games (id INTEGER PRIMARY KEY, score1 INTEGER, score2 INTEGER, winner TEXT)""")
 #Using sqlite, add 10 rows to the table "players". For id, simply number them 0 to 9. For name, use a combination of one random first name and one random last name. For offense and defense, generate a random integer between 40 and 99.
 #Use sqlite to insert or update if the row already exists
+
+gameCursor.execute("INSERT INTO games (id, score1, score2, winner) VALUES (?, ?, ?, ?)", (0, 0, 0, "Neither"))
+
 for i in range(10):
     first_name = random.choice(firstNames)
     last_name = random.choice(lastNames)
@@ -75,7 +81,12 @@ if team1Score == team2Score:
 #Convert int to string
 
 print("Score: " + str(team1Score) + " - " + str(team2Score))
+gameCursor.execute("SELECT MAX(id) FROM games")
+maxID = gameCursor.fetchone()[0]
+next_id = maxID + 1
+#Insert values into table games. Insert into next available row. Insert team1Score for score1. Insert team2Score for score2. Insert id that is greater than highest ID in table already. If team1Score is greater, insert "Team 1" for winner, else insert "Team 2".
 
+gameCursor.execute("INSERT INTO games (id, score1, score2, winner) VALUES (?, ?, ?, ?)", (next_id, team1Score, team2Score, "Team 1" if team1Score > team2Score else "Team 2"))
 conn.commit()
 
 conn.close()
